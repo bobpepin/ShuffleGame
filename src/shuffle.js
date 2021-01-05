@@ -15,8 +15,10 @@ class GameScreen {
         const options = {onComplete: () => { this.puzzle.close(); this.startFireworks(); }}
         this.puzzle = new Puzzle(this.container.querySelector("#puzzle"), options);
         this.fireworks = new Fireworks(container.querySelector("#fireworks-canvas"));
-        container.querySelector("#fireworks-canvas").addEventListener("click", e => { this.fireworks.stop(); this.switch("title"); });
+        container.querySelector("#fireworks-canvas").addEventListener("click", e => { this.fireworks.stop(); this.switch("continue"); });
         container.querySelector("#start-button").addEventListener("click", e => this.startGame());
+        container.querySelector("#continue-button").addEventListener("click", e => this.startGame());
+        container.querySelector("#new-button").addEventListener("click", e => this.newGame());
         this.switch("title");
 //         this.startFireworks();
     }
@@ -33,6 +35,12 @@ class GameScreen {
         this.switch("game");
         this.puzzle.reset();
         await this.puzzle.init();
+//        this.puzzle.progress = 4;
+    }
+    
+    async newGame() {
+        this.puzzle.sliceCount = 5;
+        await this.startGame();
     }
     
     startFireworks() {
@@ -46,6 +54,7 @@ class GameScreen {
 
 class Puzzle {
     constructor(containerDiv, options) {
+        this.sliceCount = 5;
         this.containerDiv = containerDiv;  
         this.options = options;
         this.progress = 0;
@@ -54,7 +63,6 @@ class Puzzle {
 //         this.sliceCount = sliceCount || 8;
 //         this.offset = offset;
         this.activeDrags = {};   
-        this.progress = 0;
         this.starContainer = document.querySelector("#star");
         this.starContainer.addEventListener("click", e => this.nextLevel());
         this.star = new Star(this.starContainer);
@@ -67,7 +75,7 @@ class Puzzle {
     }
 
     async init() {
-        const n = this.sliceCount = parseInt(document.querySelector("#puzzle-range").value);
+        const n = this.sliceCount; // = parseInt(document.querySelector("#puzzle-range").value);
         this.offset = randint(2*n);
         this.starContainer.style.display = "none";
         const containerDiv = this.containerDiv;
@@ -149,11 +157,12 @@ class Puzzle {
     
     
     nextLevel() {
-        if(this.progress == 5 && this.options && this.options.onComplete) {
+        this.sliceCount = Math.ceil(this.sliceCount*1.15);
+        document.querySelector("#puzzle-range").value = this.sliceCount;        
+        if(this.progress >= 5 && this.options && this.options.onComplete) {
             this.options.onComplete();
             return;
         }
-        document.querySelector("#puzzle-range").value = Math.ceil(this.sliceCount*1.15); 
         this.init();
     }
     
